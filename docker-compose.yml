@@ -15,6 +15,9 @@ services:
   alicerce:
     build: .
     read_only: true
+    # O Tomcat precisa de diretório temporário: fica em memória e sem execução.
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
     security_opt:
       - no-new-privileges:true
     cap_drop: ["ALL"]
