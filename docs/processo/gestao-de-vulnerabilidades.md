@@ -16,7 +16,7 @@ com autoridade para aceitar, com data de revisão.
 | Fonte | Ferramenta | Quando |
 |---|---|---|
 | Código (SAST) | Semgrep | todo push e pull request |
-| Dependências (SCA) | OSV-Scanner sobre o SBOM, Dependabot ou Renovate | todo push; diário para avisos novos |
+| Dependências (SCA) | OSV-Scanner sobre o SBOM, Dependabot | todo push; diário para avisos novos |
 | Segredo | gitleaks no histórico inteiro | todo push |
 | Imagem | Trivy | todo build de imagem |
 | Aplicação rodando (DAST) | OWASP ZAP baseline | todo build e semanal em produção |

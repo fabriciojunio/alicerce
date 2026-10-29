@@ -1,1 +1,2 @@
 # Regras do ZAP: id<TAB>IGNORE|WARN|FAIL<TAB>motivo
+10049	IGNORE	(Non-Storable Content) API autenticada responde sem cache de propósito; armazenar seria o problema

@@ -132,7 +132,8 @@ class SegurancaTest {
                     .andExpect(header().string("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"))
                     .andExpect(header().string("X-Frame-Options", "DENY"))
                     .andExpect(header().string("X-Content-Type-Options", "nosniff"))
-                    .andExpect(header().string("Referrer-Policy", "no-referrer"));
+                    .andExpect(header().string("Referrer-Policy", "no-referrer"))
+                    .andExpect(header().string("Cross-Origin-Resource-Policy", "same-origin"));
         }
 
         @Test

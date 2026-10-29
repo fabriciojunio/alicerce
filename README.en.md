@@ -14,7 +14,7 @@ logging and a security pipeline already in place.
 | Authorisation | Deny by default, per-route roles, resource owner taken from the token, 404 for someone else's resource | `PedidoController.java` |
 | Input | Records with only the allowed fields, plus Bean Validation | `PedidoController.java` |
 | Errors | Problem Details (RFC 9457) with `correlationId`, no stack trace | `TratadorDeErros.java` |
-| Headers | CSP, HSTS, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`; allow-listed CORS | `ConfiguracaoDeSeguranca.java` |
+| Headers | CSP, HSTS, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Resource-Policy`; allow-listed CORS | `ConfiguracaoDeSeguranca.java` |
 | Abuse | Per-address rate limit with 429 and `Retry-After` | `FiltroDeLimite.java` |
 | Logging | ECS JSON with a validated correlation id | `FiltroDeCorrelacao.java` |
 | Actuator | `health` only, no details | `application.yml` |
@@ -33,7 +33,7 @@ logging and a security pipeline already in place.
 | Image | Trivy, blocking fixable high and critical |
 | DAST | OWASP ZAP baseline against the container, started read-only |
 | Publishing | GHCR, signed with keyless cosign (Sigstore) |
-| Dependencies | Renovate with a 7-day wait and digest pinning |
+| Dependencies | Dependabot with a 7-day wait, images and actions pinned by digest |
 
 All of them free.
 
@@ -68,3 +68,8 @@ longer holds.
 - The rate limit is per instance; against distributed attacks, use the gateway or a WAF.
 - TLS terminates at the edge; mTLS between services depends on the deployment.
 - Encryption at rest and log retention depend on the database and platform chosen.
+
+## Use of AI
+
+This project was structured with the support of generative AI tools. Modelling, business rules,
+code review and conclusions were reviewed and validated by Fabrício Júnio.

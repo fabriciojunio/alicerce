@@ -14,7 +14,7 @@ e esteira de segurança já resolvidos.
 | Autorização | Negação por padrão, papéis por rota, dono do recurso vindo do token, 404 para recurso alheio | `PedidoController.java` |
 | Entrada | Records com só os campos permitidos e Bean Validation | `PedidoController.java` |
 | Erro | Problem Details (RFC 9457) com `correlationId`, sem pilha | `TratadorDeErros.java` |
-| Cabeçalhos | CSP, HSTS, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`; CORS por lista | `ConfiguracaoDeSeguranca.java` |
+| Cabeçalhos | CSP, HSTS, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Resource-Policy`; CORS por lista | `ConfiguracaoDeSeguranca.java` |
 | Abuso | Limite por endereço com 429 e `Retry-After` | `FiltroDeLimite.java` |
 | Log | JSON no formato ECS, com identificador de correlação validado | `FiltroDeCorrelacao.java` |
 | Actuator | Só `health`, sem detalhe | `application.yml` |
@@ -33,7 +33,7 @@ e esteira de segurança já resolvidos.
 | Imagem | Trivy, barrando alta e crítica com correção |
 | DAST | OWASP ZAP baseline contra o contêiner, que sobe somente leitura |
 | Publicação | GHCR, com assinatura cosign sem chave guardada (Sigstore) |
-| Dependências | Renovate com espera de 7 dias e pin por digest |
+| Dependências | Dependabot com espera de 7 dias, imagens e actions por digest |
 
 Todas gratuitas.
 
@@ -68,3 +68,8 @@ ele prova deixou de valer.
 - O limite de requisições vale por instância; contra ataque distribuído, use o gateway ou um WAF.
 - TLS fica na borda; mTLS entre serviços depende da implantação.
 - Cifra em repouso e retenção de log dependem do banco e da plataforma escolhidos.
+
+## Uso de IA
+
+Este projeto foi estruturado com apoio de ferramentas de IA generativa. Modelagem, regras de
+negócio, revisão do código e conclusões foram revisadas e validadas por Fabrício Júnio.
