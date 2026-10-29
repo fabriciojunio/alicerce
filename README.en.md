@@ -68,3 +68,8 @@ longer holds.
 - The rate limit is per instance; against distributed attacks, use the gateway or a WAF.
 - TLS terminates at the edge; mTLS between services depends on the deployment.
 - Encryption at rest and log retention depend on the database and platform chosen.
+
+## Use of AI
+
+This project was structured with the support of generative AI tools. Modelling, business rules,
+code review and conclusions were reviewed and validated by Fabrício Júnio.

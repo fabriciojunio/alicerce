@@ -68,3 +68,8 @@ ele prova deixou de valer.
 - O limite de requisições vale por instância; contra ataque distribuído, use o gateway ou um WAF.
 - TLS fica na borda; mTLS entre serviços depende da implantação.
 - Cifra em repouso e retenção de log dependem do banco e da plataforma escolhidos.
+
+## Uso de IA
+
+Este projeto foi estruturado com apoio de ferramentas de IA generativa. Modelagem, regras de
+negócio, revisão do código e conclusões foram revisadas e validadas por Fabrício Júnio.
