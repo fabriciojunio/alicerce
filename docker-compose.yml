@@ -1,0 +1,28 @@
+# Ambiente local: o serviço e o Keycloak que emite os tokens.
+# Senhas daqui só valem para a máquina de quem desenvolve.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1-0@sha256:79c623a22abacf3fe6c00a5fb30f5b7843d717b234033b80995891c06116d244
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin-local
+    volumes:
+      - ./infra/realm-alicerce.json:/opt/keycloak/data/import/realm-alicerce.json:ro
+    ports:
+      - "127.0.0.1:8180:8080"
+
+  alicerce:
+    build: .
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: ["ALL"]
+    environment:
+      ALICERCE_EMISSOR: http://keycloak:8080/realms/alicerce
+      ALICERCE_AUDIENCIA: alicerce-api
+      ALICERCE_ORIGENS: http://localhost:5173
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - keycloak

@@ -1,0 +1,31 @@
+{
+  "realm": "alicerce",
+  "enabled": true,
+  "roles": { "realm": [ { "name": "admin" }, { "name": "usuario" } ] },
+  "clients": [
+    {
+      "clientId": "alicerce-web",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:5173/*"],
+      "webOrigins": ["http://localhost:5173"],
+      "attributes": { "pkce.code.challenge.method": "S256" },
+      "protocolMappers": [
+        {
+          "name": "audiencia-alicerce-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": { "included.custom.audience": "alicerce-api", "access.token.claim": "true" }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "ana", "enabled": true, "email": "ana@exemplo.com.br", "emailVerified": true,
+      "credentials": [ { "type": "password", "value": "ana-senha-local", "temporary": false } ],
+      "realmRoles": ["usuario"]
+    }
+  ]
+}
