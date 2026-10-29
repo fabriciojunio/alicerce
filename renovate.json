@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommitTypeAll(build)"],
+  "minimumReleaseAge": "7 days",
+  "pinDigests": true,
+  "labels": ["dependencias"],
+  "packageRules": [
+    {
+      "description": "Actions do GitHub sempre por SHA, com a versão no comentário",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    },
+    {
+      "description": "Correção de segurança não espera os 7 dias",
+      "matchCategories": ["security"],
+      "minimumReleaseAge": null
+    }
+  ],
+  "vulnerabilityAlerts": { "enabled": true, "labels": ["seguranca"] }
+}
