@@ -19,6 +19,7 @@ logging and a security pipeline already in place.
 | Logging | ECS JSON with a validated correlation id | `FiltroDeCorrelacao.java` |
 | Actuator | `health` only, no details | `application.yml` |
 | Container | Distroless, non-root, read-only, no capabilities, base images pinned by digest | `Dockerfile` |
+| Outbound calls | Anti-SSRF HTTP client: HTTPS on 443 only, no internal address even through DNS rebinding or redirects, bounded time and size | `saida/ClienteHttpSeguro.java` |
 
 ## The pipeline
 
@@ -33,6 +34,7 @@ logging and a security pipeline already in place.
 | Image | Trivy, blocking fixable high and critical |
 | DAST | OWASP ZAP baseline against the container, started read-only |
 | Publishing | GHCR, signed with keyless cosign (Sigstore) |
+| VEX | OpenVEX generated from the OSV acceptances and attached to the image as a signed attestation |
 | Dependencies | Dependabot with a 7-day wait, images and actions pinned by digest |
 
 All of them free.
@@ -55,13 +57,30 @@ What is not code and companies ask for anyway (in Portuguese):
 Java 21, Maven and, for the full environment, Docker.
 
 ```bash
-mvn verify                  # 12 tests, including the security guarantees
+mvn verify                  # 43 tests, including the security guarantees and anti-SSRF
 docker compose up --build   # the service plus Keycloak with the sample realm
 ```
 
 For a new service: copy the repository, replace the `pedidos` package with your domain, adjust the
 realm and audience, and keep the `SegurancaTest` tests. If one breaks, the guarantee it proves no
 longer holds.
+
+## Calling a URL that came from outside
+
+Webhooks, import by URL, link previews: whenever the destination depends on the user, use
+`ClienteHttpSeguro`, which ships as a bean. The address check lives in the HttpClient DNS resolver,
+so the validated IP is the one the connection uses: there is no window for DNS rebinding, and every
+redirect goes through the same check. An internal service that must be called is added to
+`PoliticaDeSaida` with its exact range. The proof is in `ClienteHttpSeguroTest`: loopback, private
+networks, cloud metadata, internal IPv6, NAT64, mixed DNS records, redirects to another host and
+to another port.
+
+## VEX
+
+`scripts/vex.py` turns the `osv-scanner.toml` acceptances into an OpenVEX document. An acceptance
+within its deadline becomes `not_affected`, with the justification and the CVE; an expired one
+becomes `under_investigation`, because once the deadline passes nobody has reassessed it. On
+publishing, the document is attached to the image as a cosign-signed attestation.
 
 ## What the template does not solve
 

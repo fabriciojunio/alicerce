@@ -37,6 +37,8 @@ jobs:
           distribution: temurin
           cache: maven
       - run: mvn -B verify
+      - name: Testes dos scripts (gerador de VEX)
+        run: python3 -m unittest discover -s scripts -p "test_*.py"
 
   codigo:
     name: Segredos, SAST e SCA
@@ -142,3 +144,11 @@ jobs:
           digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$imagem")
           cosign sign --yes "$digest"
           echo "Assinada: $digest"
+          # VEX: o que o scanner do cliente vai achar no SBOM e não se aplica, e por quê. Sai dos
+          # aceites do osv-scanner.toml; sem aceite, o documento vai vazio, o que também é afirmação.
+          config=osv-scanner.toml; [ -f "$config" ] || config=/dev/null
+          sha="${digest#*@}"
+          produto="pkg:oci/alicerce@${sha/:/%3A}?repository_url=ghcr.io/${GITHUB_REPOSITORY,,}"
+          python3 scripts/vex.py "$config" "$produto" vex.json
+          cosign attest --yes --type openvex --predicate vex.json "$digest"
+          echo "VEX anexado como atestado assinado."

@@ -19,6 +19,7 @@ e esteira de segurança já resolvidos.
 | Log | JSON no formato ECS, com identificador de correlação validado | `FiltroDeCorrelacao.java` |
 | Actuator | Só `health`, sem detalhe | `application.yml` |
 | Contêiner | Distroless, sem root, somente leitura, sem capacidades, bases por digest | `Dockerfile` |
+| Chamada para fora | Cliente HTTP anti-SSRF: só HTTPS na 443, nenhum endereço interno nem por DNS rebinding ou redirecionamento, tempo e tamanho limitados | `saida/ClienteHttpSeguro.java` |
 
 ## A esteira
 
@@ -33,6 +34,7 @@ e esteira de segurança já resolvidos.
 | Imagem | Trivy, barrando alta e crítica com correção |
 | DAST | OWASP ZAP baseline contra o contêiner, que sobe somente leitura |
 | Publicação | GHCR, com assinatura cosign sem chave guardada (Sigstore) |
+| VEX | OpenVEX gerado dos aceites do OSV e anexado à imagem como atestado assinado |
 | Dependências | Dependabot com espera de 7 dias, imagens e actions por digest |
 
 Todas gratuitas.
@@ -55,13 +57,30 @@ O que não é código e as empresas pedem junto:
 Java 21, Maven e, para o ambiente completo, Docker.
 
 ```bash
-mvn verify                  # 12 testes, inclusive as garantias de segurança
+mvn verify                  # 43 testes, inclusive as garantias de segurança e o anti-SSRF
 docker compose up --build   # o serviço e o Keycloak com o realm de exemplo
 ```
 
 Para um serviço novo: copie o repositório, troque o pacote `pedidos` pelo seu domínio, ajuste o
 `realm` e a audiência, e mantenha os testes de `SegurancaTest`. Se um deles quebrar, a garantia que
 ele prova deixou de valer.
+
+## Chamada para URL que veio de fora
+
+Webhook, importação por URL, prévia de link: sempre que o destino depender do usuário, use o
+`ClienteHttpSeguro`, que já vem como bean. A checagem do endereço mora no resolvedor de DNS do
+HttpClient, então o IP validado é o mesmo que a conexão usa: não há janela para DNS rebinding, e
+cada redirecionamento passa pela mesma checagem. Serviço interno que precise ser chamado entra na
+`PoliticaDeSaida` com a faixa exata. A prova está em `ClienteHttpSeguroTest`: loopback, redes
+privadas, metadados da nuvem, IPv6 interno, NAT64, registro de DNS misto, redirecionamento para
+outro host e para outra porta.
+
+## VEX
+
+`scripts/vex.py` transforma os aceites do `osv-scanner.toml` num documento OpenVEX. Aceite no
+prazo vira `not_affected`, com a justificativa e a CVE; aceite vencido vira
+`under_investigation`, porque passado o prazo ninguém reavaliou. Na publicação, o documento vai
+para a imagem como atestado assinado com cosign.
 
 ## O que o modelo não resolve
 
