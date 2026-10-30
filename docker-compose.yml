@@ -7,6 +7,10 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin-local
+      # O token sai sempre com o endereço público no "iss", venha a chamada do
+      # navegador (localhost:8180) ou do serviço (keycloak:8080).
+      KC_HOSTNAME: http://localhost:8180
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
     volumes:
       - ./infra/realm-alicerce.json:/opt/keycloak/data/import/realm-alicerce.json:ro
     ports:
@@ -22,7 +26,8 @@ services:
       - no-new-privileges:true
     cap_drop: ["ALL"]
     environment:
-      ALICERCE_EMISSOR: http://keycloak:8080/realms/alicerce
+      ALICERCE_EMISSOR: http://localhost:8180/realms/alicerce
+      ALICERCE_JWKS: http://keycloak:8080/realms/alicerce/protocol/openid-connect/certs
       ALICERCE_AUDIENCIA: alicerce-api
       ALICERCE_ORIGENS: http://localhost:5173
     ports:

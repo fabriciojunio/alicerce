@@ -9,6 +9,11 @@ spring:
           # emissor bater e se o serviço estiver na audiência: um token válido
           # emitido para outro serviço do mesmo provedor é recusado.
           issuer-uri: ${ALICERCE_EMISSOR:http://localhost:8180/realms/alicerce}
+          # O "iss" do token é o endereço público do Keycloak, mas dentro do
+          # compose o serviço só alcança o Keycloak pela rede interna. Com o
+          # jwk-set-uri definido, as chaves vêm por ele e o "iss" continua
+          # conferido contra o issuer-uri.
+          jwk-set-uri: ${ALICERCE_JWKS:http://localhost:8180/realms/alicerce/protocol/openid-connect/certs}
           audiences: ${ALICERCE_AUDIENCIA:alicerce-api}
 
 server:
