@@ -1,0 +1,35 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  // O Renovate cuida só do Maven; o Dependabot (dependabot.yml) ficou com Docker
+  // e GitHub Actions. A divisão evita dois PRs para a mesma coisa.
+  enabledManagers: ["maven"],
+  // Painel único no issue, com o que está pendente e o que foi adiado.
+  dependencyDashboard: true,
+  dependencyDashboardTitle: "Painel de dependências",
+  timezone: "America/Sao_Paulo",
+  schedule: ["before 6am on monday"],
+  // Mesma regra do Dependabot: versão nova espera 7 dias publicada antes de virar PR.
+  minimumReleaseAge: "7 days",
+  internalChecksFilter: "strict",
+  semanticCommits: "enabled",
+  semanticCommitType: "build",
+  semanticCommitScope: "deps",
+  prConcurrentLimit: 5,
+  prHourlyLimit: 2,
+  labels: ["dependências"],
+  // Alerta de vulnerabilidade pelo banco do OSV, sem depender só do GitHub.
+  osvVulnerabilityAlerts: true,
+  vulnerabilityAlerts: {
+    // Correção de segurança não espera os 7 dias nem o horário agendado.
+    minimumReleaseAge: null,
+    schedule: ["at any time"],
+    labels: ["dependências", "segurança"],
+  },
+  packageRules: [
+    {
+      // Patch e minor num PR só, para revisar junto; major fica separado.
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "atualizações menores do Maven",
+    },
+  ],
+}
