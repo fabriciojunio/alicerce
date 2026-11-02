@@ -50,6 +50,8 @@ O que não é código e as empresas pedem junto:
 - [Modelo de aviso de segurança](docs/processo/modelo-de-advisory.md).
 - [Programa de Security Champions](docs/processo/security-champions.md).
 - [Respostas ao questionário de segurança de cliente](docs/processo/questionario-de-seguranca.md).
+- [Atualização de dependências](docs/processo/atualizacao-de-dependencias.md): Renovate para o Maven,
+  Dependabot para a infraestrutura, regra de maturidade e token.
 - [Modelo de ameaças](docs/seguranca/modelo-de-ameacas.md).
 
 ## Como usar

@@ -1,15 +1,9 @@
 version: 2
+# O Maven saiu daqui: quem cuida das dependências da aplicação é o Renovate
+# (.github/renovate.json5), que agrupa e tem painel. O Dependabot fica com a
+# infraestrutura, para não abrir PR duplicado. Em ambos, versão nova só depois
+# de 7 dias publicada; correção de segurança não espera.
 updates:
-  # Versão nova só depois de 7 dias publicada. Correção de segurança não
-  # espera: o Dependabot abre o PR assim que o aviso sai.
-  - package-ecosystem: "maven"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 7
-    commit-message:
-      prefix: "build(deps)"
   # Imagens base fixadas por digest no Dockerfile e no compose.
   - package-ecosystem: "docker"
     directory: "/"
