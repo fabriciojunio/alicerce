@@ -27,3 +27,6 @@
 
     - name: Cron
       ansible.builtin.import_tasks: tarefas/cron.yml
+
+    - name: Contas
+      ansible.builtin.import_tasks: tarefas/contas.yml
