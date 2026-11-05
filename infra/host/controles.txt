@@ -63,3 +63,12 @@ kernel_module_hfs_disabled
 kernel_module_hfsplus_disabled
 kernel_module_jffs2_disabled
 kernel_module_usb-storage_disabled
+
+# Cron (2.4)
+file_permissions_crontab
+file_permissions_cron_d
+file_permissions_cron_hourly
+file_permissions_cron_daily
+file_permissions_cron_weekly
+file_permissions_cron_monthly
+file_permissions_cron_allow

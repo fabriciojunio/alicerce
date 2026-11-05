@@ -1,0 +1,26 @@
+# CIS Ubuntu 24.04, seção 2.4: o agendador roda como root, então quem consegue
+# escrever ou ler os arquivos dele consegue rodar ou conhecer o que o root roda.
+- name: Arquivos do cron só para o root
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: root
+    group: root
+    mode: "{{ item.modo }}"
+  loop:
+    - { path: /etc/crontab, modo: "0600" }
+    - { path: /etc/cron.d, modo: "0700" }
+    - { path: /etc/cron.hourly, modo: "0700" }
+    - { path: /etc/cron.daily, modo: "0700" }
+    - { path: /etc/cron.weekly, modo: "0700" }
+    - { path: /etc/cron.monthly, modo: "0700" }
+
+# Com o cron.allow existindo, só quem está nele agenda tarefa (lista de
+# permissão, como no resto do projeto). Vazio: só o root.
+- name: Lista de quem pode usar o cron
+  ansible.builtin.copy:
+    dest: /etc/cron.allow
+    content: ""
+    force: false
+    owner: root
+    group: root
+    mode: "0640"

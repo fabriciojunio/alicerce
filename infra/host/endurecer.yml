@@ -24,3 +24,6 @@
 
     - name: Módulos do kernel
       ansible.builtin.import_tasks: tarefas/modulos.yml
+
+    - name: Cron
+      ansible.builtin.import_tasks: tarefas/cron.yml
