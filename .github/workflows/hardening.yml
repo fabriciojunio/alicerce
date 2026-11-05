@@ -1,0 +1,73 @@
+name: Hardening do host
+
+# O serviço roda num host Linux, e um contêiner bem feito não salva um host
+# aberto. Este workflow mede um Ubuntu 24.04 (o próprio runner, uma VM
+# descartável) no perfil CIS nível 1 para servidor, com o OpenSCAP e o conteúdo
+# oficial do ComplianceAsCode.
+
+on:
+  push:
+    branches: ["produção", "homologação"]
+    paths: ["infra/host/**", "scripts/openscap*.py", ".github/workflows/hardening.yml"]
+  pull_request:
+    paths: ["infra/host/**", "scripts/openscap*.py", ".github/workflows/hardening.yml"]
+  schedule:
+    - cron: "0 7 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Versão e hash do pacote oficial. Atualizar os dois juntos.
+  SSG_VERSAO: "0.1.82"
+  SSG_SHA256: "765e84bdce7f9055f9b9c2dd0ee2b713d4255f8eec94eac6d35ea4973c28919c"
+  PERFIL: xccdf_org.ssgproject.content_profile_cis_level1_server
+
+jobs:
+  medir:
+    name: OpenSCAP, CIS nível 1 (Ubuntu 24.04)
+    # Fixado em 24.04: o perfil e as regras são desta versão.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar o OpenSCAP
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq openscap-scanner
+          oscap --version | head -1
+
+      - name: Baixar o conteúdo do CIS e conferir o hash
+        run: |
+          set -euo pipefail
+          curl -sSfL -o ssg.zip \
+            "https://github.com/ComplianceAsCode/content/releases/download/v${SSG_VERSAO}/scap-security-guide-${SSG_VERSAO}.zip"
+          echo "${SSG_SHA256}  ssg.zip" | sha256sum -c -
+          unzip -q -j ssg.zip "scap-security-guide-${SSG_VERSAO}/ssg-ubuntu2404-ds.xml"
+
+      - name: Medir antes
+        run: |
+          # Código 2 é "terminou, e há regra reprovada": esperado no antes.
+          # Qualquer outro código diferente de zero é erro do próprio scanner.
+          set +e
+          sudo oscap xccdf eval --profile "$PERFIL" \
+            --results antes.xml --report antes.html ssg-ubuntu2404-ds.xml > /dev/null
+          codigo=$?
+          set -e
+          if [ "$codigo" -ne 0 ] && [ "$codigo" -ne 2 ]; then exit "$codigo"; fi
+          sudo chown "$(id -u)" antes.xml antes.html
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: openscap-cis
+          path: |
+            antes.xml
+            antes.html
+          retention-days: 30
