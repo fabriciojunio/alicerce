@@ -64,6 +64,18 @@
     - { path: /etc/ssh/sshd_config, modo: "0600" }
     - { path: /etc/ssh/sshd_config.d, modo: "0700" }
 
+# Os outros arquivos da pasta (o do cloud-init, por exemplo) também são lidos
+# pelo sshd, então valem as mesmas regras de permissão.
+- name: Permissão dos outros arquivos de configuração do SSH
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop: "{{ outros_sshd.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+
 - name: Chaves do servidor SSH
   ansible.builtin.find:
     paths: /etc/ssh
