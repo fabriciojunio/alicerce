@@ -80,6 +80,16 @@
   loop_control:
     label: "{{ item.path }}"
 
+# O sshd -t exige esta pasta, que o systemd só cria quando o serviço sobe; com o
+# SSH ativado por socket ela pode não existir ainda.
+- name: Pasta de separação de privilégio do sshd
+  ansible.builtin.file:
+    path: /run/sshd
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
 # Configuração inválida derrubaria o próximo acesso remoto: valida antes de
 # recarregar. O handler só roda depois deste passo.
 - name: Validar a configuração do SSH
