@@ -3,7 +3,8 @@ name: Hardening do host
 # O serviço roda num host Linux, e um contêiner bem feito não salva um host
 # aberto. Este workflow mede um Ubuntu 24.04 (o próprio runner, uma VM
 # descartável) no perfil CIS nível 1 para servidor, com o OpenSCAP e o conteúdo
-# oficial do ComplianceAsCode.
+# oficial do ComplianceAsCode; aplica infra/host/endurecer.yml; mede de novo; e
+# reprova se algum controle de infra/host/controles.txt não passar.
 
 on:
   push:
@@ -26,6 +27,7 @@ env:
   SSG_VERSAO: "0.1.82"
   SSG_SHA256: "765e84bdce7f9055f9b9c2dd0ee2b713d4255f8eec94eac6d35ea4973c28919c"
   PERFIL: xccdf_org.ssgproject.content_profile_cis_level1_server
+  ANSIBLE_CORE: "2.21.5"
 
 jobs:
   medir:
@@ -64,10 +66,32 @@ jobs:
           if [ "$codigo" -ne 0 ] && [ "$codigo" -ne 2 ]; then exit "$codigo"; fi
           sudo chown "$(id -u)" antes.xml antes.html
 
+      - name: Aplicar o endurecimento
+        run: |
+          pipx install "ansible-core==${ANSIBLE_CORE}"
+          ansible-playbook -i localhost, -c local --become infra/host/endurecer.yml
+
+      - name: Medir depois
+        run: |
+          set +e
+          sudo oscap xccdf eval --profile "$PERFIL" \
+            --results depois.xml --report depois.html ssg-ubuntu2404-ds.xml > /dev/null
+          codigo=$?
+          set -e
+          if [ "$codigo" -ne 0 ] && [ "$codigo" -ne 2 ]; then exit "$codigo"; fi
+          sudo chown "$(id -u)" depois.xml depois.html
+
+      - name: Conferir os controles do projeto
+        run: python3 scripts/openscap_resumo.py antes.xml depois.xml infra/host/controles.txt --resumo "$GITHUB_STEP_SUMMARY"
+
+      # Os relatórios sobem mesmo se o portão reprovar: são eles que mostram o porquê.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
         with:
           name: openscap-cis
           path: |
             antes.xml
             antes.html
+            depois.xml
+            depois.html
           retention-days: 30

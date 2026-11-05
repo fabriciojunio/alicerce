@@ -1,0 +1,20 @@
+# Endurece o host Linux onde o contêiner do serviço roda, no perfil CIS nível 1
+# para servidor do Ubuntu 24.04. Cada arquivo em tarefas/ cuida de uma área, e
+# cada controle aplicado está em controles.txt, que o CI confere com o OpenSCAP.
+#
+# Uso: ansible-playbook -i localhost, -c local --become infra/host/endurecer.yml
+- name: Endurecer o host
+  hosts: all
+  become: true
+  gather_facts: false
+
+  handlers:
+    # Com o SSH ativado por socket o serviço pode estar parado, e "reload"
+    # falharia; este comando recarrega se estiver rodando e não faz nada se não.
+    - name: Recarregar o SSH
+      ansible.builtin.command: systemctl try-reload-or-restart ssh
+      changed_when: true
+
+  tasks:
+    - name: SSH
+      ansible.builtin.import_tasks: tarefas/ssh.yml

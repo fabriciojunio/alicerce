@@ -1,0 +1,31 @@
+# Controles do CIS nível 1 (Ubuntu 24.04) que este projeto se compromete a
+# cumprir. O CI aplica infra/host/endurecer.yml num Ubuntu limpo, mede com o
+# OpenSCAP e reprova se qualquer regra abaixo não passar.
+#
+# Ficaram de fora, de propósito:
+#   sysctl_net_ipv4_ip_forward e sysctl_net_ipv6_conf_all_forwarding: host de
+#     contêiner precisa encaminhar pacote entre a rede do Docker e a externa.
+#   package_ufw_installed e service_ufw_enabled: no runner o firewall disputa as
+#     regras com o Docker; no host real o firewall fica na borda da nuvem.
+
+# SSH (5.1)
+sshd_disable_root_login
+sshd_disable_empty_passwords
+sshd_disable_rhosts
+sshd_do_not_permit_user_env
+sshd_enable_pam
+sshd_set_loglevel_info
+sshd_set_max_auth_tries
+sshd_set_max_sessions
+sshd_set_maxstartups
+sshd_set_login_grace_time
+sshd_set_idle_timeout
+sshd_set_keepalive
+sshd_enable_warning_banner_net
+sshd_use_strong_ciphers
+sshd_use_strong_macs
+sshd_use_strong_kex
+file_permissions_sshd_config
+file_permissions_sshd_drop_in_config
+file_permissions_sshd_private_key
+file_permissions_sshd_pub_key
