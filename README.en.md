@@ -54,7 +54,7 @@ What is not code and companies ask for anyway (in Portuguese):
 
 ## Usage
 
-Java 21, Maven and, for the full environment, Docker.
+Java 25, Maven and, for the full environment, Docker.
 
 ```bash
 mvn verify                  # 43 tests, including the security guarantees and anti-SSRF
