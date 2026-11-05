@@ -1,0 +1,48 @@
+# CIS Ubuntu 24.04, seções 1.5 e 3.3: parâmetros do kernel. Um arquivo próprio
+# em /etc/sysctl.d, com número alto para ser lido por último e prevalecer, e o
+# valor aplicado na hora, sem esperar reinício.
+#
+# O encaminhamento de pacote (ip_forward) continua ligado: o host roda o
+# contêiner e o Docker precisa dele. Está explicado em controles.txt.
+- name: Parâmetros do kernel endurecidos
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-alicerce.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Gerado por infra/host/tarefas/kernel.yml. Não editar à mão.
+      # Memória: endereço aleatório e sem core dump de programa com setuid.
+      kernel.randomize_va_space = 2
+      fs.suid_dumpable = 0
+      kernel.yama.ptrace_scope = 1
+      # IPv4: não aceitar rota imposta de fora nem redirecionamento.
+      net.ipv4.conf.all.accept_redirects = 0
+      net.ipv4.conf.default.accept_redirects = 0
+      net.ipv4.conf.all.secure_redirects = 0
+      net.ipv4.conf.default.secure_redirects = 0
+      net.ipv4.conf.all.send_redirects = 0
+      net.ipv4.conf.default.send_redirects = 0
+      net.ipv4.conf.all.accept_source_route = 0
+      net.ipv4.conf.default.accept_source_route = 0
+      # Pacote com origem impossível: descartar e registrar.
+      net.ipv4.conf.all.rp_filter = 1
+      net.ipv4.conf.default.rp_filter = 1
+      net.ipv4.conf.all.log_martians = 1
+      net.ipv4.conf.default.log_martians = 1
+      net.ipv4.icmp_echo_ignore_broadcasts = 1
+      net.ipv4.icmp_ignore_bogus_error_responses = 1
+      net.ipv4.tcp_syncookies = 1
+      # IPv6: mesmas regras, e sem aceitar anúncio de roteador.
+      net.ipv6.conf.all.accept_ra = 0
+      net.ipv6.conf.default.accept_ra = 0
+      net.ipv6.conf.all.accept_redirects = 0
+      net.ipv6.conf.default.accept_redirects = 0
+      net.ipv6.conf.all.accept_source_route = 0
+      net.ipv6.conf.default.accept_source_route = 0
+  register: sysctl_alicerce
+
+- name: Aplicar os parâmetros agora
+  ansible.builtin.command: sysctl --system
+  when: sysctl_alicerce.changed
+  changed_when: true
