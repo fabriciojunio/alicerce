@@ -88,3 +88,8 @@ accounts_password_pam_enforcing
 accounts_maximum_age_login_defs
 accounts_password_warn_age_login_defs
 accounts_umask_etc_login_defs
+
+# Aviso de uso autorizado (1.7)
+banner_etc_issue_cis
+banner_etc_issue_net_cis
+banner_etc_motd_cis

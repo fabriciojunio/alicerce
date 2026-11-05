@@ -1,0 +1,11 @@
+# CIS Ubuntu 24.04, seção 1.7: aviso de uso autorizado na entrada. O texto não
+# diz sistema, versão nem nome de máquina, para não entregar de graça o que um
+# atacante descobriria com varredura.
+- name: Aviso de uso autorizado
+  ansible.builtin.copy:
+    dest: "{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+    content: "Authorized users only. All activity may be monitored and reported.\n"
+  loop: [/etc/issue, /etc/issue.net, /etc/motd]

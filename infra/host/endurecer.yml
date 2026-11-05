@@ -30,3 +30,6 @@
 
     - name: Contas
       ansible.builtin.import_tasks: tarefas/contas.yml
+
+    - name: Aviso de entrada
+      ansible.builtin.import_tasks: tarefas/aviso.yml
