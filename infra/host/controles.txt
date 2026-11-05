@@ -55,3 +55,11 @@ sysctl_net_ipv6_conf_all_accept_redirects
 sysctl_net_ipv6_conf_default_accept_redirects
 sysctl_net_ipv6_conf_all_accept_source_route
 sysctl_net_ipv6_conf_default_accept_source_route
+
+# Módulos do kernel (1.1.1)
+kernel_module_cramfs_disabled
+kernel_module_freevxfs_disabled
+kernel_module_hfs_disabled
+kernel_module_hfsplus_disabled
+kernel_module_jffs2_disabled
+kernel_module_usb-storage_disabled

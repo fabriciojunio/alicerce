@@ -21,3 +21,6 @@
 
     - name: Kernel
       ansible.builtin.import_tasks: tarefas/kernel.yml
+
+    - name: Módulos do kernel
+      ansible.builtin.import_tasks: tarefas/modulos.yml
