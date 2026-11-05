@@ -49,6 +49,8 @@ O que não é código e as empresas pedem junto:
   CVE, correção privada e divulgação coordenada.
 - [Modelo de aviso de segurança](docs/processo/modelo-de-advisory.md).
 - [Programa de Security Champions](docs/processo/security-champions.md).
+- [Hardening do host](docs/processo/hardening-do-host.md): CIS nível 1 do Ubuntu 24.04 medido com o
+  OpenSCAP antes e depois, 74 de 74 controles do projeto aprovados no CI.
 - [Respostas ao questionário de segurança de cliente](docs/processo/questionario-de-seguranca.md).
 - [Atualização de dependências](docs/processo/atualizacao-de-dependencias.md): Renovate para o Maven,
   Dependabot para a infraestrutura, regra de maturidade e token.

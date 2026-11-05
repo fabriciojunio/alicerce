@@ -49,6 +49,8 @@ What is not code and companies ask for anyway (in Portuguese):
   private fix and coordinated disclosure.
 - [Security advisory template](docs/processo/modelo-de-advisory.md).
 - [Security Champions programme](docs/processo/security-champions.md).
+- [Host hardening](docs/processo/hardening-do-host.md) (Portuguese): Ubuntu 24.04 CIS level 1
+  measured with OpenSCAP before and after, 74 of 74 project controls passing in CI.
 - [Answers to customer security questionnaires](docs/processo/questionario-de-seguranca.md).
 - [Threat model](docs/seguranca/modelo-de-ameacas.md).
 
