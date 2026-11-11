@@ -1,0 +1,87 @@
+# CIS Ubuntu 24.04, seções 1.5 e 3.3: parâmetros do kernel. Um arquivo próprio
+# em /etc/sysctl.d, com número alto para ser lido por último e prevalecer, e o
+# valor aplicado na hora, sem esperar reinício.
+#
+# O encaminhamento de pacote (ip_forward) continua ligado: o host roda o
+# contêiner e o Docker precisa dele. Está explicado em controles.txt.
+- name: Parâmetros do kernel endurecidos
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-alicerce.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Gerado por infra/host/tarefas/kernel.yml. Não editar à mão.
+      # Memória: endereço aleatório e sem core dump de programa com setuid.
+      kernel.randomize_va_space = 2
+      fs.suid_dumpable = 0
+      kernel.yama.ptrace_scope = 1
+      # IPv4: não aceitar rota imposta de fora nem redirecionamento.
+      net.ipv4.conf.all.accept_redirects = 0
+      net.ipv4.conf.default.accept_redirects = 0
+      net.ipv4.conf.all.secure_redirects = 0
+      net.ipv4.conf.default.secure_redirects = 0
+      net.ipv4.conf.all.send_redirects = 0
+      net.ipv4.conf.default.send_redirects = 0
+      net.ipv4.conf.all.accept_source_route = 0
+      net.ipv4.conf.default.accept_source_route = 0
+      # Pacote com origem impossível: descartar e registrar.
+      net.ipv4.conf.all.rp_filter = 1
+      net.ipv4.conf.default.rp_filter = 1
+      net.ipv4.conf.all.log_martians = 1
+      net.ipv4.conf.default.log_martians = 1
+      net.ipv4.icmp_echo_ignore_broadcasts = 1
+      net.ipv4.icmp_ignore_bogus_error_responses = 1
+      net.ipv4.tcp_syncookies = 1
+      # IPv6: mesmas regras, e sem aceitar anúncio de roteador.
+      net.ipv6.conf.all.accept_ra = 0
+      net.ipv6.conf.default.accept_ra = 0
+      net.ipv6.conf.all.accept_redirects = 0
+      net.ipv6.conf.default.accept_redirects = 0
+      net.ipv6.conf.all.accept_source_route = 0
+      net.ipv6.conf.default.accept_source_route = 0
+  register: sysctl_alicerce
+
+# O valor em execução já sai certo (o 99 é lido por último), mas outro arquivo
+# com o mesmo parâmetro e valor diferente deixa a configuração ambígua: no
+# Ubuntu, o 10-network-security.conf põe rp_filter = 2, e o sysctl.conf do ufw
+# põe log_martians = 0 (escrito com barra: net/ipv4/conf/all/log_martians).
+# Comenta a definição conflitante e deixa escrito quem a substituiu. /usr/lib
+# fica de fora: é do pacote, e o /etc já prevalece sobre ele.
+- name: Arquivos avulsos de parâmetros do kernel que existem
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: [/etc/sysctl.conf, /etc/ufw/sysctl.conf]
+  register: sysctl_avulsos
+
+- name: Outros arquivos de parâmetros do kernel
+  ansible.builtin.find:
+    paths: [/etc/sysctl.d, /run/sysctl.d, /usr/local/lib/sysctl.d]
+    patterns: "*.conf"
+    excludes: "99-alicerce.conf"
+  register: outros_sysctl
+
+- name: Comentar definições que contradizem o 99-alicerce.conf
+  ansible.builtin.replace:
+    path: "{{ item.0 }}"
+    regexp: '^(\s*{{ item.1 | regex_escape | replace("\.", "[./]") }}\s*=.*)$'
+    replace: '# \1  # substituído por /etc/sysctl.d/99-alicerce.conf'
+  loop: "{{ ((sysctl_avulsos.results | selectattr('stat.exists') | map(attribute='item') | list) + (outros_sysctl.files | map(attribute='path') | list)) | product(parametros) | list }}"
+  loop_control:
+    label: "{{ item.0 }}: {{ item.1 }}"
+  vars:
+    parametros: [net.ipv4.conf.all.rp_filter, net.ipv4.conf.default.rp_filter,
+                 net.ipv4.conf.all.log_martians, net.ipv4.conf.default.log_martians,
+                 net.ipv4.conf.all.accept_redirects, net.ipv4.conf.default.accept_redirects,
+                 net.ipv4.conf.all.secure_redirects, net.ipv4.conf.default.secure_redirects,
+                 net.ipv4.conf.all.send_redirects, net.ipv4.conf.default.send_redirects,
+                 net.ipv4.conf.all.accept_source_route, net.ipv4.conf.default.accept_source_route,
+                 net.ipv4.icmp_echo_ignore_broadcasts, net.ipv4.icmp_ignore_bogus_error_responses,
+                 net.ipv4.tcp_syncookies, kernel.randomize_va_space, fs.suid_dumpable,
+                 kernel.yama.ptrace_scope]
+  register: conflitos_sysctl
+
+- name: Aplicar os parâmetros agora
+  ansible.builtin.command: sysctl --system
+  when: sysctl_alicerce.changed or conflitos_sysctl.changed
+  changed_when: true

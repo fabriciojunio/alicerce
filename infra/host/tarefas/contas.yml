@@ -1,0 +1,34 @@
+# CIS Ubuntu 24.04, seção 5.3 e 5.4: senha e criação de arquivo. O acesso ao
+# servidor é por chave SSH; a política de senha vale para a conta local que
+# existir mesmo assim (console, emergência).
+- name: Verificação de qualidade de senha instalada
+  ansible.builtin.apt:
+    name: libpam-pwquality
+    state: present
+
+- name: Qualidade mínima de senha
+  ansible.builtin.lineinfile:
+    path: /etc/security/pwquality.conf
+    regexp: '^\s*#?\s*{{ item.chave }}\s*='
+    line: "{{ item.chave }} = {{ item.valor }}"
+  loop:
+    - { chave: minlen, valor: "14" }
+    - { chave: minclass, valor: "4" }
+    - { chave: dcredit, valor: "-1" }
+    - { chave: ucredit, valor: "-1" }
+    - { chave: lcredit, valor: "-1" }
+    - { chave: ocredit, valor: "-1" }
+    - { chave: maxrepeat, valor: "3" }
+    - { chave: difok, valor: "2" }
+    - { chave: dictcheck, valor: "1" }
+    - { chave: enforcing, valor: "1" }
+
+- name: Validade da senha e máscara de criação de arquivo
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: '^\s*#?\s*{{ item.chave }}\s'
+    line: "{{ item.chave }}\t{{ item.valor }}"
+  loop:
+    - { chave: PASS_MAX_DAYS, valor: "365" }
+    - { chave: PASS_WARN_AGE, valor: "7" }
+    - { chave: UMASK, valor: "027" }

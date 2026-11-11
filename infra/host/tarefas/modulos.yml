@@ -1,0 +1,26 @@
+# CIS Ubuntu 24.04, seção 1.1.1: sistemas de arquivos que um servidor não usa e
+# armazenamento USB. Cada módulo a menos é código de kernel a menos que um
+# dispositivo ou imagem maliciosa consegue acionar. "install /bin/false" impede
+# o carregamento até por dependência; "blacklist" impede o automático.
+- name: Módulos do kernel desativados
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/alicerce-desativados.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Gerado por infra/host/tarefas/modulos.yml. Não editar à mão.
+      {% for modulo in modulos_desativados %}
+      install {{ modulo }} /bin/false
+      blacklist {{ modulo }}
+      {% endfor %}
+  vars:
+    modulos_desativados: [cramfs, freevxfs, hfs, hfsplus, jffs2, usb-storage]
+
+# Módulo que não está carregado faz o modprobe -r falhar, e isso é o esperado.
+- name: Descarregar os que estiverem carregados
+  ansible.builtin.command: modprobe -r {{ item }}
+  loop: [cramfs, freevxfs, hfs, hfsplus, jffs2, usb_storage]
+  register: descarregar
+  changed_when: descarregar.rc == 0
+  failed_when: false
