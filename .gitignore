@@ -3,3 +3,7 @@ target/
 .idea/
 *.iml
 .env
+
+# Bytecode do Python gerado pelos testes dos scripts
+__pycache__/
+*.pyc
