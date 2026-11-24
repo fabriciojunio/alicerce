@@ -3,7 +3,7 @@ name: Esteira
 # A esteira que todo serviço copiado deste modelo herda. Cada etapa barra
 # sozinha; nenhuma roda com continue-on-error.
 #
-#   teste      testes de unidade e de segurança da aplicação
+#   teste      testes de unidade e de segurança da aplicação, e das regras de alerta
 #   codigo     segredo no histórico (gitleaks), SAST (Semgrep), SCA (OSV no SBOM)
 #   imagem     constrói, varre a imagem (Trivy) e faz DAST (ZAP) no contêiner
 #   publicar   só em produção: envia ao GHCR e assina com cosign, sem chave guardada
@@ -37,6 +37,11 @@ jobs:
           distribution: temurin
           cache: maven
       - run: mvn -B verify
+      - name: Regras de alerta (promtool)
+        run: |
+          rodar() { docker run --rm --entrypoint promtool -v "$PWD/infra/observabilidade:/obs:ro" --workdir /obs prom/prometheus:v3.16.0 "$@"; }
+          rodar check rules regras.yml
+          rodar test rules regras.teste.yml
       - name: Testes dos scripts (gerador de VEX)
         run: python3 -m unittest discover -s scripts -p "test_*.py"
 

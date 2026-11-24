@@ -27,12 +27,35 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health, prometheus
   endpoint:
     health:
       show-details: never
       probes:
         enabled: true
+  # Métrica sai por coleta, no /actuator/prometheus. Sem isto o starter tentaria
+  # empurrar por OTLP para um coletor que pode não existir.
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  tracing:
+    export:
+      enabled: ${ALICERCE_TRACE:false}
+    sampling:
+      probability: ${ALICERCE_AMOSTRA:0.1}
+    propagation:
+      type: w3c
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${ALICERCE_COLETOR:http://localhost:4318/v1/traces}
+  metrics:
+    distribution:
+      slo:
+        # Os baldes do SLO: p95 até 300 ms.
+        http.server.requests: 50ms, 100ms, 300ms, 1s, 3s
 
 logging:
   structured:

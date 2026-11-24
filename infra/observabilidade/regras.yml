@@ -1,0 +1,75 @@
+# Alertas que todo serviço copiado do modelo herda. O que fazer em cada um está em
+# docs/processo/operacao.md.
+
+groups:
+  - name: servico
+    rules:
+      - record: alicerce:erros:razao5m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{outcome="SERVER_ERROR",uri!~"/actuator.*"}[5m]))
+          / sum(rate(http_server_requests_seconds_count{uri!~"/actuator.*"}[5m]))
+      - record: alicerce:erros:razao1h
+        expr: |
+          sum(rate(http_server_requests_seconds_count{outcome="SERVER_ERROR",uri!~"/actuator.*"}[1h]))
+          / sum(rate(http_server_requests_seconds_count{uri!~"/actuator.*"}[1h]))
+
+      # SLO de 99,5%: queimar 14,4x gasta 2% do orçamento do mês em uma hora.
+      - alert: OrcamentoDeErroQueimando
+        expr: alicerce:erros:razao5m > 14.4 * 0.005 and alicerce:erros:razao1h > 14.4 * 0.005
+        for: 2m
+        labels: { severidade: critica }
+        annotations:
+          resumo: "{{ $value | humanizePercentage }} das respostas com erro do servidor"
+          runbook: docs/processo/operacao.md#erro-do-servidor
+
+      - alert: RespostaLenta
+        expr: |
+          histogram_quantile(0.95, sum by (le) (
+            rate(http_server_requests_seconds_bucket{uri!~"/actuator.*"}[10m])
+          )) > 0.3
+        for: 10m
+        labels: { severidade: atencao }
+        annotations:
+          resumo: "p95 em {{ $value | humanizeDuration }}"
+          runbook: docs/processo/operacao.md#resposta-lenta
+
+      - alert: ServicoForaDoAr
+        expr: up{job="alicerce"} == 0
+        for: 2m
+        labels: { severidade: critica }
+        annotations:
+          resumo: "o serviço não responde à coleta"
+          runbook: docs/processo/operacao.md#servico-fora-do-ar
+
+  - name: deteccao
+    rules:
+      # O cliente anti-SSRF só recusa destino interno: um já é tentativa.
+      - alert: TentativaDeSsrf
+        expr: increase(alicerce_seguranca_eventos_total{evento="destino_bloqueado"}[10m]) > 0
+        labels: { severidade: critica, mitre: T1090 }
+        annotations:
+          resumo: "pedido para endereço interno recusado"
+          runbook: docs/processo/operacao.md#tentativa-de-ssrf
+
+      - alert: TokensRecusados
+        expr: sum(increase(alicerce_seguranca_eventos_total{evento="token_recusado"}[10m])) > 50
+        for: 2m
+        labels: { severidade: atencao, mitre: T1550.001 }
+        annotations:
+          resumo: "{{ $value | humanize }} tokens recusados em 10 min"
+          runbook: docs/processo/operacao.md#tokens-recusados
+
+      - alert: AcessoNegadoEmMassa
+        expr: sum(increase(alicerce_seguranca_eventos_total{evento="acesso_negado"}[10m])) > 30
+        labels: { severidade: atencao, mitre: T1078 }
+        annotations:
+          resumo: "conta autenticada tentando rota acima do papel dela"
+          runbook: docs/processo/operacao.md#acesso-negado-em-massa
+
+      - alert: LimiteAtingido
+        expr: sum(increase(alicerce_seguranca_eventos_total{evento="limite_atingido"}[10m])) > 500
+        for: 5m
+        labels: { severidade: atencao, mitre: T1498 }
+        annotations:
+          resumo: "{{ $value | humanize }} requisições recusadas por limite em 10 min"
+          runbook: docs/processo/operacao.md#limite-atingido

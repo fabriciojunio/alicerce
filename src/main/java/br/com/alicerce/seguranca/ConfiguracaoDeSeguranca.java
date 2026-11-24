@@ -37,6 +37,9 @@ public class ConfiguracaoDeSeguranca {
         http
                 .authorizeHttpRequests(regras -> regras
                         .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
+                        // O Prometheus coleta com client_credentials e este papel. Contagem de
+                        // token recusado por minuto é informação para quem ataca.
+                        .requestMatchers(HttpMethod.GET, "/actuator/prometheus").hasRole("metricas")
                         .requestMatchers("/actuator/**").denyAll()
                         .requestMatchers("/api/admin/**").hasRole("admin")
                         .anyRequest().authenticated())

@@ -1,0 +1,74 @@
+# promtool test rules regras.teste.yml
+
+rule_files: [regras.yml]
+evaluation_interval: 1m
+
+tests:
+  - name: um destino interno recusado já avisa
+    interval: 1m
+    input_series:
+      - series: 'alicerce_seguranca_eventos_total{evento="destino_bloqueado"}'
+        values: '0 0 0 1 1'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: TentativaDeSsrf
+        exp_alerts: []
+      - eval_time: 4m
+        alertname: TentativaDeSsrf
+        exp_alerts:
+          - exp_labels: { severidade: critica, mitre: T1090, evento: destino_bloqueado }
+            exp_annotations:
+              resumo: "pedido para endereço interno recusado"
+              runbook: docs/processo/operacao.md#tentativa-de-ssrf
+
+  - name: token vencido de vez em quando não é ataque
+    interval: 1m
+    input_series:
+      - series: 'alicerce_seguranca_eventos_total{evento="token_recusado"}'
+        values: '0+2x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: TokensRecusados
+        exp_alerts: []
+
+  - name: enxurrada de token recusado avisa
+    interval: 1m
+    input_series:
+      - series: 'alicerce_seguranca_eventos_total{evento="token_recusado"}'
+        values: '0+20x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: TokensRecusados
+        exp_alerts:
+          - exp_labels: { severidade: atencao, mitre: T1550.001 }
+            exp_annotations:
+              resumo: "200 tokens recusados em 10 min"
+              runbook: docs/processo/operacao.md#tokens-recusados
+
+  - name: a sonda com erro não gasta o orçamento
+    interval: 1m
+    input_series:
+      - series: 'http_server_requests_seconds_count{outcome="SERVER_ERROR",uri="/actuator/health"}'
+        values: '0+10x90'
+      - series: 'http_server_requests_seconds_count{outcome="SUCCESS",uri="/api/pedidos"}'
+        values: '0+90x90'
+    alert_rule_test:
+      - eval_time: 80m
+        alertname: OrcamentoDeErroQueimando
+        exp_alerts: []
+
+  - name: erro de servidor nas duas janelas
+    interval: 1m
+    input_series:
+      - series: 'http_server_requests_seconds_count{outcome="SERVER_ERROR",uri="/api/pedidos"}'
+        values: '0+10x90'
+      - series: 'http_server_requests_seconds_count{outcome="SUCCESS",uri="/api/pedidos"}'
+        values: '0+90x90'
+    alert_rule_test:
+      - eval_time: 80m
+        alertname: OrcamentoDeErroQueimando
+        exp_alerts:
+          - exp_labels: { severidade: critica }
+            exp_annotations:
+              resumo: "10% das respostas com erro do servidor"
+              runbook: docs/processo/operacao.md#erro-do-servidor
