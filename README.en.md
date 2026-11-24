@@ -15,9 +15,11 @@ logging and a security pipeline already in place.
 | Input | Records with only the allowed fields, plus Bean Validation | `PedidoController.java` |
 | Errors | Problem Details (RFC 9457) with `correlationId`, no stack trace | `TratadorDeErros.java` |
 | Headers | CSP, HSTS, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Resource-Policy`; allow-listed CORS | `ConfiguracaoDeSeguranca.java` |
-| Abuse | Per-address rate limit with 429 and `Retry-After` | `FiltroDeLimite.java` |
+| Abuse | Per-address rate limit (per /64 on IPv6) with 429 and `Retry-After`, bounded memory | `FiltroDeLimite.java` |
 | Logging | ECS JSON with a validated correlation id | `FiltroDeCorrelacao.java` |
-| Actuator | `health` only, no details | `application.yml` |
+| Actuator | `health` without details; `prometheus` only with the `metricas` role; the rest denied | `application.yml`, `ConfiguracaoDeSeguranca.java` |
+| Detection | A counter per security event, born at zero, with MITRE ATT&CK tagged alerts | `EventosDeSeguranca.java`, `infra/observabilidade/` |
+| Tracing | OpenTelemetry over OTLP, off until there is a collector; `traceId` in logs | `application.yml` |
 | Container | Distroless, non-root, read-only, no capabilities, base images pinned by digest | `Dockerfile` |
 | Outbound calls | Anti-SSRF HTTP client: HTTPS on 443 only, no internal address even through DNS rebinding or redirects, bounded time and size | `saida/ClienteHttpSeguro.java` |
 
@@ -28,6 +30,7 @@ logging and a security pipeline already in place.
 | Stage | Tool |
 |---|---|
 | Tests, security tests included | JUnit, Spring Security Test |
+| Alert rules | promtool, with a case that fires and one that must not |
 | Secrets in history | gitleaks |
 | SAST | Semgrep |
 | SCA | OSV-Scanner over a CycloneDX SBOM |
@@ -52,6 +55,8 @@ What is not code and companies ask for anyway (in Portuguese):
 - [Host hardening](docs/processo/hardening-do-host.md) (Portuguese): Ubuntu 24.04 CIS level 1
   measured with OpenSCAP before and after, 74 of 74 project controls passing in CI.
 - [Answers to customer security questionnaires](docs/processo/questionario-de-seguranca.md).
+- [Operations and detection](docs/processo/operacao.md) (Portuguese): what the service emits, SLOs and
+  what to do on each alert.
 - [Threat model](docs/seguranca/modelo-de-ameacas.md).
 
 ## Usage
@@ -59,7 +64,7 @@ What is not code and companies ask for anyway (in Portuguese):
 Java 25, Maven and, for the full environment, Docker.
 
 ```bash
-mvn verify                  # 43 tests, including the security guarantees and anti-SSRF
+mvn verify                  # 62 tests, including the security guarantees and anti-SSRF
 docker compose up --build   # the service plus Keycloak with the sample realm
 ```
 
@@ -89,8 +94,3 @@ publishing, the document is attached to the image as a cosign-signed attestation
 - The rate limit is per instance; against distributed attacks, use the gateway or a WAF.
 - TLS terminates at the edge; mTLS between services depends on the deployment.
 - Encryption at rest and log retention depend on the database and platform chosen.
-
-## Use of AI
-
-This project was structured with the support of generative AI tools. Modelling, business rules,
-code review and conclusions were reviewed and validated by Fabrício Júnio.

@@ -19,6 +19,9 @@
 
   <properties>
     <java.version>25</java.version>
+    <!-- O Boot 4.1.2 traz a 1.62.0, com custo quadrático na leitura do tracestate
+         (GHSA-ccrj-gw8r-854m). O serviço lê esse cabeçalho de qualquer cliente. -->
+    <opentelemetry.version>1.68.0</opentelemetry.version>
   </properties>
 
   <dependencies>
@@ -37,6 +40,15 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-opentelemetry</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents.client5</groupId>

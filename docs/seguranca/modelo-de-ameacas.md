@@ -25,7 +25,9 @@ provedor de identidade, de quem ele só aceita token assinado.
 | R | Ação sem rastro | log JSON com `correlationId` em toda requisição | `FiltroDeCorrelacao.java` |
 | I | Ler recurso de outro usuário (BOLA) | posse conferida; outro dono recebe 404 | `SegurancaTest.pedidoDeOutroDonoResponde404` |
 | I | Detalhe interno no erro | RFC 9457 sem pilha nem mensagem da exceção | `SegurancaTest.corpoInvalidoResponde400SemDetalheInterno` |
-| I | Actuator expondo ambiente ou memória | só `health`, sem detalhe; o resto negado | `SegurancaTest.actuatorSoExpoeSaudeSemDetalhe` |
+| I | Actuator expondo ambiente ou memória | `health` sem detalhe e `prometheus` com papel próprio; o resto negado | `SegurancaTest.actuatorSoExpoeSaudeSemDetalhe`, `ObservabilidadeTest` |
+| I | Métrica contando a quem ataca o efeito do ataque | papel `metricas` e rótulo de lista fechada, sem valor do cliente | `ObservabilidadeTest.metricaExigeOPapelDeColeta` |
+| D | Trocar de endereço para encher a memória do limite | teto de endereços, janela vencida apagada e /64 no IPv6 | `FiltroDeLimiteTest` |
 | D | Muitas requisições de uma origem | limite por endereço, 429 com `Retry-After` | `LimiteTest` |
 | E | Usuário comum em rota de administração | papel `admin` exigido na configuração | `SegurancaTest.rotaDeAdminRecusaUsuarioComum` |
 | E | Invasor com shell no contêiner | distroless, sem root, somente leitura, sem capacidades | `Dockerfile`; job `imagem` |

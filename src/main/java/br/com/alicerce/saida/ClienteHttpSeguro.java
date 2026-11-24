@@ -37,13 +37,20 @@ public class ClienteHttpSeguro implements Closeable {
 
     private final PoliticaDeSaida politica;
     private final CloseableHttpClient cliente;
+    private final Runnable aoBloquear;
 
     public ClienteHttpSeguro(PoliticaDeSaida politica) {
-        this(politica, new ResolvedorSeguro(politica));
+        this(politica, () -> { });
     }
 
-    ClienteHttpSeguro(PoliticaDeSaida politica, ResolvedorSeguro resolvedor) {
+    /** @param aoBloquear chamado quando a política recusa um destino, para a detecção */
+    public ClienteHttpSeguro(PoliticaDeSaida politica, Runnable aoBloquear) {
+        this(politica, new ResolvedorSeguro(politica), aoBloquear);
+    }
+
+    ClienteHttpSeguro(PoliticaDeSaida politica, ResolvedorSeguro resolvedor, Runnable aoBloquear) {
         this.politica = politica;
+        this.aoBloquear = aoBloquear;
         Timeout limite = Timeout.of(politica.tempoLimite());
         this.cliente = HttpClients.custom()
                 .setConnectionManager(PoolingHttpClientConnectionManagerBuilder.create()
@@ -66,6 +73,21 @@ public class ClienteHttpSeguro implements Closeable {
 
     /** Busca o recurso e devolve o corpo como texto, ou lança se a política recusar. */
     public String buscar(URI destino) throws IOException {
+        try {
+            return buscarConferindo(destino);
+        } catch (IOException e) {
+            // O bloqueio pode vir direto, do resolvedor de DNS ou de um redirecionamento.
+            for (Throwable causa = e; causa != null; causa = causa.getCause()) {
+                if (causa instanceof DestinoBloqueado) {
+                    aoBloquear.run();
+                    break;
+                }
+            }
+            throw e;
+        }
+    }
+
+    private String buscarConferindo(URI destino) throws IOException {
         conferir(destino);
         return cliente.execute(new HttpGet(destino), resposta -> {
             if (resposta.getCode() >= 400) {
