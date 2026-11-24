@@ -15,9 +15,11 @@ e esteira de segurança já resolvidos.
 | Entrada | Records com só os campos permitidos e Bean Validation | `PedidoController.java` |
 | Erro | Problem Details (RFC 9457) com `correlationId`, sem pilha | `TratadorDeErros.java` |
 | Cabeçalhos | CSP, HSTS, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Resource-Policy`; CORS por lista | `ConfiguracaoDeSeguranca.java` |
-| Abuso | Limite por endereço com 429 e `Retry-After` | `FiltroDeLimite.java` |
+| Abuso | Limite por endereço (em IPv6, por /64) com 429 e `Retry-After`, e memória com teto | `FiltroDeLimite.java` |
 | Log | JSON no formato ECS, com identificador de correlação validado | `FiltroDeCorrelacao.java` |
-| Actuator | Só `health`, sem detalhe | `application.yml` |
+| Actuator | `health` sem detalhe; `prometheus` só com o papel `metricas`; o resto negado | `application.yml`, `ConfiguracaoDeSeguranca.java` |
+| Detecção | Contador por evento de segurança, com série nascendo em zero e alerta com técnica do MITRE ATT&CK | `EventosDeSeguranca.java`, `infra/observabilidade/` |
+| Trace | OpenTelemetry por OTLP, desligado até haver coletor; `traceId` no log | `application.yml` |
 | Contêiner | Distroless, sem root, somente leitura, sem capacidades, bases por digest | `Dockerfile` |
 | Chamada para fora | Cliente HTTP anti-SSRF: só HTTPS na 443, nenhum endereço interno nem por DNS rebinding ou redirecionamento, tempo e tamanho limitados | `saida/ClienteHttpSeguro.java` |
 
@@ -28,6 +30,7 @@ e esteira de segurança já resolvidos.
 | Etapa | Ferramenta |
 |---|---|
 | Testes, incluindo os de segurança | JUnit, Spring Security Test |
+| Regras de alerta | promtool, com caso que dispara e que não pode disparar |
 | Segredos no histórico | gitleaks |
 | SAST | Semgrep |
 | SCA | OSV-Scanner sobre SBOM CycloneDX |
@@ -54,6 +57,8 @@ O que não é código e as empresas pedem junto:
 - [Respostas ao questionário de segurança de cliente](docs/processo/questionario-de-seguranca.md).
 - [Atualização de dependências](docs/processo/atualizacao-de-dependencias.md): Renovate para o Maven,
   Dependabot para a infraestrutura, regra de maturidade e token.
+- [Operação e detecção](docs/processo/operacao.md): o que o serviço emite, SLO e o que fazer em cada
+  alerta.
 - [Modelo de ameaças](docs/seguranca/modelo-de-ameacas.md).
 
 ## Como usar
@@ -61,7 +66,7 @@ O que não é código e as empresas pedem junto:
 Java 25, Maven e, para o ambiente completo, Docker.
 
 ```bash
-mvn verify                  # 43 testes, inclusive as garantias de segurança e o anti-SSRF
+mvn verify                  # 62 testes, inclusive as garantias de segurança e o anti-SSRF
 docker compose up --build   # o serviço e o Keycloak com o realm de exemplo
 ```
 
@@ -91,8 +96,3 @@ para a imagem como atestado assinado com cosign.
 - O limite de requisições vale por instância; contra ataque distribuído, use o gateway ou um WAF.
 - TLS fica na borda; mTLS entre serviços depende da implantação.
 - Cifra em repouso e retenção de log dependem do banco e da plataforma escolhidos.
-
-## Uso de IA
-
-Este projeto foi estruturado com apoio de ferramentas de IA generativa. Modelagem, regras de
-negócio, revisão do código e conclusões foram revisadas e validadas por Fabrício Júnio.
