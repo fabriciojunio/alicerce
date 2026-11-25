@@ -10,7 +10,7 @@ RUN mvn -B -q dependency:go-offline
 COPY src src
 RUN mvn -B -q -DskipTests package && cp target/alicerce-*.jar aplicacao.jar
 
-FROM gcr.io/distroless/java25-debian13:nonroot@sha256:8ac5525549d14b8ddd34562f9fc8e6ba4840c995363a1507b17cadf8bb7ab57e
+FROM gcr.io/distroless/java25-debian13:nonroot@sha256:4618e7a1a1f5177222985347e1ffd503076f6be5837b89c8fd02800bd8551bde
 WORKDIR /app
 COPY --from=construcao --chown=nonroot:nonroot /construcao/aplicacao.jar aplicacao.jar
 # Usuário 65532 da imagem distroless. Roda também com sistema de arquivos
